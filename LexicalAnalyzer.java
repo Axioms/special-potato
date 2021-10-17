@@ -68,6 +68,8 @@ public class LexicalAnalyzer
                 tokType = TokenType.WHILE_TOK;
             else if (lexeme.equals("print"))
                 tokType = TokenType.PRINT_TOK;
+            else if (lexeme.equals("display"))
+                tokType = TokenType.DISPLAY_TOK;
             else
                 throw new LexicalException ("invalid lexeme at row number " +
                         (lineNumber + 1) + " and column " + (columnNumber + 1));
@@ -112,6 +114,8 @@ public class LexicalAnalyzer
             tokType = TokenType.EQ_TOK;
         else if (lexeme.equals("!="))
             tokType = TokenType.NE_TOK;
+        else if (lexeme.equals("\""))
+            tokType = TokenType.QUOTE_TOK;
         else if (lexeme.equals(":"))
             tokType = TokenType.COL_TOK;
         else
