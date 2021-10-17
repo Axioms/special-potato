@@ -1,5 +1,64 @@
-import java.io.FileNotFoundException;
+/*
+File name: Parser.java
+What it does:
+1. public Parser(String fileName): Invokes the lexical analyzer with the file as the argument
+2. public Program parse() 
+    2.1 searches for next token and specifies that it has to be FUNCTION_TOK 
+    i.e. every program starts with function
+    2.2 gets the function name (ex. function a)
+    2.3 looks for the next tokens and they have to be 
+    LEFT_PAREN_TOK and RIGHT_PAREN_TOK because Julia function declarations
+    are of the form function a ( )
+    2.4 Gets block
+    2.5 makes sure the function ends with END_TOK
+    2.6 Does error handling and says anything after end is garbage
+    2.7 return new Program (blk);
+3. private Block getBlock() is the getter method for Block.java. It adds statements to the 
+block for the interpreter. 
+4. getStatement() declares a stmt and calls Token tok = lex.getLookaheadToken(); to determine what token
+are valid starts to statements AND sets stmt equal to the getter method that corresponds with what 
+token is at the beginning of the statement (for ex. if it starts with DISPLAY_TOK then stmt is a 
+PrintStatement so it calls getPrintStatement)
+5. getAssignmentStatement() addresses statements of the form var = expr. It assigns var to getId and 
+scans for the next token which MUST be ASSIGN_TOK (which is "="). Then it assigns expr to 
+getArithmeticExpression  which categorizes arithmetic expressions based on what tokens they start with 
+(ex. constant, Id, etc.)
+6. GENERAL FORMAT OF THE GETTER METHODS OF TYPE STATEMENT:
+     private Statement get<whatever method this applies to>() throws ParserException, LexicalException
+    {
+        Token tok = lex.getNextToken();
+        match (tok, TokenType.<whichever token>_TOK);
+        tok = lex.getNextToken ();
+        match (tok, TokenType.<whichever token>_TOK);
+        tok = lex.getNextToken ();
+        return new <whichever file this is associated with> (arg1, arg2, etc.);
+    } 
+    GENERAL FORMAT OF THE GETTER METHODS OF TYPE ARITHMETICEXPRESSION, BINARY, OR BOOLEANEXPRESSION:
+     private <whichever file this applies to> get<what it applies to>() throws ParserException, LexicalException
+    {
+        <declare an op>
+        Token tok = lex.getNextToken();
+        if (tok.getTokType() == TokenType.<whichever token>)
+            op = <operator>.<token>;
+        else if (tok.getTokType() == TokenType.<whichever token>)
+            op = <operator>.<token>;
+        ...
+        else
+            throw new ParserException ("operator expected at row " +
+                    tok.getRowNumber()  + " and column " + tok.getColumnNumber());
 
+        ArithmeticExpression expr1 = getArithmeticExpression();
+        ArithmeticExpression expr2 = getArithmeticExpression ();
+        return new <type of expression>Expression (op, expr1, expr2);
+    }
+   
+7. private boolean isValidStartOfStatement(Token tok): this specifies what tokens a statement can start with
+(id, if, while, for, display). It's a boolean because it evaluates to T/F and throws an exception 
+if the statement starts with something that isn't a token it specified.
+8. match() basically uses lookahead to make sure tokens match token types.
+*/
+
+import java.io.FileNotFoundException;
 
 public class Parser
 {
@@ -49,7 +108,7 @@ public class Parser
             stmt = getIfStatement();
         else if (tok.getTokType() == TokenType.WHILE_TOK)
             stmt = getWhileStatement();
-        else if (tok.getTokType() == TokenType.PRINT_TOK)
+        else if (tok.getTokType() == TokenType.DISPLAY_TOK)
             stmt = getPrintStatement();
         else if (tok.getTokType() == TokenType.ID_TOK)
             stmt = getAssignmentStatement();
@@ -70,7 +129,7 @@ public class Parser
         ArithmeticExpression expr = getArithmeticExpression();
         return new AssignmentStatement (var, expr);
     }
-
+    /*
     private Statement getPrintStatement() throws ParserException, LexicalException
     {
         Token tok = lex.getNextToken();
@@ -81,7 +140,18 @@ public class Parser
         tok = lex.getNextToken ();
         match (tok, TokenType.RIGHT_PAREN_TOK);
         return new PrintStatement (expr);
-    }
+    } */
+    private Statement getPrintStatement() throws ParserException, LexicalException
+    {
+        Token tok = lex.getNextToken();
+        match (tok, TokenType.DISPLAY_TOK);
+        tok = lex.getNextToken ();
+        match (tok, TokenType.QUOTE_TOK);
+        ArithmeticExpression expr = getArithmeticExpression();
+        tok = lex.getNextToken ();
+        match (tok, TokenType.QUOTE_TOK);
+        return new PrintStatement (expr);
+    } 
 
     private Statement getForStatement() throws ParserException, LexicalException
     {
@@ -133,7 +203,7 @@ public class Parser
                 tok.getTokType() == TokenType.IF_TOK ||
                 tok.getTokType() == TokenType.WHILE_TOK ||
                 tok.getTokType() == TokenType.FOR_TOK ||
-                tok.getTokType() == TokenType.PRINT_TOK;
+                tok.getTokType() == TokenType.DISPLAY_TOK;
     }
 
 
